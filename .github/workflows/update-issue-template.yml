@@ -3,7 +3,7 @@ name: Sync Issue Template with Templates Folder
 on:
   push:
     paths:
-      - "templates/*.xml"
+      - "Templates/*.xml"
   workflow_dispatch:
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
           echo "Building issue template from /templates folder..."
 
           # Collect XML filenames (strip extension)
-          templates=$(ls templates/*.xml | xargs -n1 basename | sed 's/.xml$//')
+          templates=$(ls Templates/*.xml | xargs -n1 basename | sed 's/.xml$//')
 
           # Start YAML
           cat > .github/ISSUE_TEMPLATE/generate-wdac.yml <<'EOF'
@@ -41,7 +41,7 @@ jobs:
               id: template
               attributes:
                 label: Template
-                description: Choose a template from the `/templates/` folder.
+                description: Choose a template from the `/Templates/` folder.
                 options:
           EOF
 
