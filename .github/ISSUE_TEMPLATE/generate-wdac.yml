@@ -1,6 +1,6 @@
 name: Generate WDAC policy
 description: Provide details to generate a WDAC policy from a template (output will be provided as a downloadable artifact; nothing is committed to the repo).
-title: "WDAC: {policy_name} v{version}"
+title: "WDAC: {policy_name} {version}"
 labels: [wdac, generate]
 assignees: []
 body:

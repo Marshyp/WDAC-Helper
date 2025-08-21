@@ -1,0 +1,108 @@
+name: Sync Issue Template with Templates Folder
+
+on:
+  push:
+    paths:
+      - "templates/*.xml"
+  workflow_dispatch:
+
+jobs:
+  update-issue-template:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build issue form from template files
+        id: build
+        run: |
+          echo "Building issue template from /templates folder..."
+
+          # Collect XML filenames (strip extension)
+          templates=$(ls templates/*.xml | xargs -n1 basename | sed 's/.xml$//')
+
+          # Start YAML
+          cat > .github/ISSUE_TEMPLATE/generate-wdac.yml <<'EOF'
+          name: Generate WDAC policy
+          description: Provide details to generate a WDAC policy from a template (output will be placed in TEMP-Files and auto-deleted after 2 days).
+          title: "WDAC: {policy_name} v{version}"
+          labels: [wdac, generate]
+          assignees: []
+          body:
+            - type: markdown
+              attributes:
+                value: |
+                  ## WDAC Policy Generator
+                  Submit this form to kick off a workflow that renders a WDAC XML policy from the selected template.
+                  - The generated file will be committed into the **TEMP-Files/** folder.
+                  - Files are retained for **2 days** and then auto-deleted.
+
+            - type: dropdown
+              id: template
+              attributes:
+                label: Template
+                description: Choose a template from the `/templates/` folder.
+                options:
+          EOF
+
+          # Append dynamic options
+          for t in $templates; do
+            echo "                  - $t" >> .github/ISSUE_TEMPLATE/generate-wdac.yml
+          done
+
+          # Rest of the form
+          cat >> .github/ISSUE_TEMPLATE/generate-wdac.yml <<'EOF'
+
+            - type: input
+              id: policy_name
+              attributes:
+                label: Policy name
+                placeholder: "7-Zip Allow"
+              validations:
+                required: true
+
+            - type: input
+              id: version
+              attributes:
+                label: Version
+                placeholder: "1.0.0"
+              validations:
+                required: true
+
+            - type: input
+              id: base_policy_id
+              attributes:
+                label: Base Policy GUID
+                placeholder: "00000000-0000-0000-0000-000000000000"
+              validations:
+                required: true
+
+            - type: input
+              id: new_policy_id
+              attributes:
+                label: New Policy GUID (optional)
+                description: Leave blank to auto-generate a new GUID.
+
+            - type: textarea
+              id: notes
+              attributes:
+                label: Extra options (optional)
+                description: Add one option per line (e.g., SupplementalPolicy=true).
+                placeholder: |
+                  SupplementalPolicy=true
+                  AllowCommercialIssuers=false
+
+            - type: checkboxes
+              id: confirm
+              attributes:
+                label: Confirm
+                options:
+                  - label: I understand the generated XML will be committed to TEMP-Files/ (visible in the repo) and auto-deleted after 2 days.
+                    required: true
+          EOF
+
+      - name: Commit updated issue template
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Sync issue form with /templates folder"
+          file_pattern: ".github/ISSUE_TEMPLATE/generate-wdac.yml"
