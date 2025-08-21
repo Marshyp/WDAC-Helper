@@ -1,0 +1,73 @@
+# .github/workflows/generate-wdac.yml
+name: Generate WDAC Policy
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  build:
+    if: contains(github.event.issue.labels.*.name, 'generate')
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Parse inputs from the Issue Form
+      - name: Parse form inputs
+        id: parse
+        shell: pwsh
+        run: |
+          $body = @'
+          ${{ github.event.issue.body }}
+          '@
+          function Get-Field([string]$label) {
+            if ($body -match "(?m)^\*\*$label\*\*:\s*(.+)$") { return $Matches[1].Trim() }
+            return ""
+          }
+          $template      = Get-Field "Template"
+          $policyName    = Get-Field "Policy name"
+          $version       = Get-Field "Version"
+          $basePolicyId  = Get-Field "Base Policy GUID"
+          $newPolicyId   = Get-Field "New Policy GUID \(optional\)"
+
+          echo "template=$template"       >> $env:GITHUB_OUTPUT
+          echo "policyName=$policyName"   >> $env:GITHUB_OUTPUT
+          echo "version=$version"         >> $env:GITHUB_OUTPUT
+          echo "basePolicyId=$basePolicyId" >> $env:GITHUB_OUTPUT
+          echo "newPolicyId=$newPolicyId" >> $env:GITHUB_OUTPUT
+
+      # Generate WDAC XML into TEMP-Files
+      - name: Generate WDAC XML
+        id: gen
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path TEMP-Files | Out-Null
+
+          $templatePath = "templates/${{ steps.parse.outputs.template }}.xml"
+          if (-not (Test-Path $templatePath)) { throw "Template not found: $templatePath" }
+
+          $xml = Get-Content $templatePath -Raw
+          $policyId = if ("${{ steps.parse.outputs.newPolicyId }}") { "${{ steps.parse.outputs.newPolicyId }}" } else { [guid]::NewGuid().Guid }
+
+          $xml = $xml.Replace("{{POLICY_NAME}}", "${{ steps.parse.outputs.policyName }}")
+                     .Replace("{{VERSION}}", "${{ steps.parse.outputs.version }}")
+                     .Replace("{{BASE_POLICY_ID}}", "${{ steps.parse.outputs.basePolicyId }}")
+                     .Replace("{{NEW_POLICY_ID}}", $policyId)
+
+          $date = (Get-Date).ToString('yyyy-MM-dd')
+          $user = "${{ github.event.issue.user.login }}".Replace('/', '-').Replace('\','-').Replace(':','-')
+          $prefix = (Split-Path $templatePath -Leaf).Replace('.xml','')
+          $prefix = $prefix -replace '\s+', ''
+
+          $outfile = "TEMP-Files/$prefix-$date-$user.xml"
+          $xml | Set-Content -Path $outfile -Encoding UTF8
+
+          echo "outfile=$outfile" >> $env:GITHUB_OUTPUT
+
+      # Commit generated file back to repo
+      - name: Commit WDAC policy to TEMP-Files
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Add WDAC policy ${{ steps.gen.outputs.outfile }}"
+          file_pattern: "TEMP-Files/*.xml"

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <SiPolicy PolicyType="Supplemental Policy" xmlns="urn:schemas-microsoft-com:sipolicy">
-  <VersionEx>{{VERSION}}}}</VersionEx>
+  <VersionEx>{{VERSION}}</VersionEx>
   <PolicyID>{{NEW_POLICY_ID}}</PolicyID>
   <BasePolicyID>{{BASE_POLICY_ID}}</BasePolicyID>
   <PlatformID>{2E07F7E4-194C-4D20-B7C9-6F44A6C5A234}</PlatformID>
@@ -2182,7 +2182,7 @@
     </Setting>
     <Setting Provider="PolicyInfo" Key="Information" ValueName="Id">
       <Value>
-        <String>{{date}}</String>
+        <String>MarshypTemplates</String>
       </Value>
     </Setting>
   </Settings>

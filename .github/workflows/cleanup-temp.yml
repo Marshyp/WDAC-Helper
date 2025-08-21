@@ -1,0 +1,23 @@
+# .github/workflows/cleanup-temp.yml
+name: Cleanup old TEMP-Files
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # runs daily at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Delete old files (>2 days)
+        run: |
+          find TEMP-Files -type f -name '*.xml' -mtime +2 -print -delete
+
+      - name: Commit cleanup
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Cleanup TEMP-Files (remove >2 day old files)"
+          file_pattern: "TEMP-Files/*.xml"
