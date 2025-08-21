@@ -1,0 +1,74 @@
+name: Generate WDAC policy
+description: Provide details to generate a WDAC policy from a template (output will be provided as a downloadable artifact; nothing is committed to the repo).
+title: "WDAC: {policy_name} v{version}"
+labels: [wdac, generate]
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## WDAC Policy Generator
+        Submit this form to kick off a workflow that renders a WDAC XML policy from the selected template.
+        - The generated file is stored in a TEMP folder during the run and uploaded as a workflow **artifact**.
+        - Artifacts are retained for **2 days** and then auto-deleted.
+        - If you include an email below, a copy will also be sent there.
+
+  - type: dropdown
+    id: template
+    attributes:
+      label: Template
+      description: Choose the base template to render.
+      options:
+        - 7-Zip
+        - Adobe Reader
+        - Microsoft Office
+        - Custom baseline
+    validations:
+      required: true
+
+  - type: input
+    id: policy_name
+    attributes:
+      label: Policy name
+      placeholder: "Contoso 7-Zip Allow"
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: base_policy_id
+    attributes:
+      label: Base Policy GUID
+      placeholder: "00000000-0000-0000-0000-000000000000"
+    validations:
+      required: true
+
+  - type: input
+    id: new_policy_id
+    attributes:
+      label: New Policy GUID (optional)
+      description: Leave blank to auto-generate a new GUID.
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Extra options (optional)
+      description: Add one option per line (e.g., SupplementalPolicy=true).
+      placeholder: |
+        SupplementalPolicy=true
+        AllowCommercialIssuers=false
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirm
+      options:
+        - label: I understand that any email entered above will be visible in this issue, and that the downloadable artifact will be auto-deleted after 2 days.
+          required: true
